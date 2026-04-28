@@ -10,10 +10,15 @@ import 'admin/search_result_screen.dart';
 import 'admin/evaluation_screen.dart';
 import 'admin/top_teams_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'controllers/auth_controller.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize AuthController globally
+  Get.put(AuthController(), permanent: true);
+  
   bool isLogged = false;
   if (!kIsWeb) {
     final prefs = await SharedPreferences.getInstance();

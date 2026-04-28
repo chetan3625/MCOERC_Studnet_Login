@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/evaluation_controller.dart';
 import '../controllers/team_controller.dart';
+import '../controllers/auth_controller.dart';
 import '../views/custom_button.dart';
 
 class EvaluationScreen extends StatefulWidget {
@@ -14,20 +15,24 @@ class EvaluationScreen extends StatefulWidget {
 class _EvaluationScreenState extends State<EvaluationScreen> {
   final EvaluationController evalController = Get.put(EvaluationController());
   final TeamController teamController = Get.find<TeamController>();
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   void initState() {
     super.initState();
     evalController.resetScores();
     
-    // Pre-fill if already evaluated
+    // Pre-fill if current supervisor has already evaluated
     final eval = teamController.searchEvaluation.value;
-    if (eval != null) {
-      evalController.idea.value = (eval['scores']['idea'] as num).toDouble();
-      evalController.speech.value = (eval['scores']['speech'] as num).toDouble();
-      evalController.problemSolution.value = (eval['scores']['problemSolution'] as num).toDouble();
-      evalController.presentation.value = (eval['scores']['presentation'] as num).toDouble();
-      evalController.futureScope.value = (eval['scores']['futureScope'] as num).toDouble();
+    if (eval != null && eval['supervisorEvaluations'] != null) {
+      final myEval = eval['supervisorEvaluations'][authController.supervisorId.value];
+      if (myEval != null) {
+        evalController.idea.value = (myEval['idea'] as num).toDouble();
+        evalController.speech.value = (myEval['speech'] as num).toDouble();
+        evalController.problemSolution.value = (myEval['problemSolution'] as num).toDouble();
+        evalController.presentation.value = (myEval['presentation'] as num).toDouble();
+        evalController.futureScope.value = (myEval['futureScope'] as num).toDouble();
+      }
     }
   }
 
@@ -39,8 +44,8 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
         Obx(() => Slider(
           value: value.value,
           min: 0,
-          max: 10,
-          divisions: 10,
+          max: 20,
+          divisions: 20,
           label: value.value.toInt().toString(),
           onChanged: (val) {
             value.value = val;
@@ -61,6 +66,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
         child: Column(
           children: [
             Text('Team: ${teamController.searchResult.value!.teamName}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Evaluating as: ${authController.supervisorId.value}', style: const TextStyle(fontSize: 14, color: Colors.grey)),
             const SizedBox(height: 24),
             _buildSlider('Idea', evalController.idea),
             _buildSlider('Speech', evalController.speech),
@@ -69,7 +75,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
             _buildSlider('Future Scope', evalController.futureScope),
             const Divider(height: 48),
             Obx(() => Text(
-              'Total Score: ${evalController.totalScore.toInt()}',
+              'Your Total Score: ${evalController.totalScore.toInt()}',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
             )),
             const SizedBox(height: 48),

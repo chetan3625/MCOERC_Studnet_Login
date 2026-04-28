@@ -29,13 +29,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   void addMember() {
-    setState(() {
-      memberControllers.add({
-        'name': TextEditingController(),
-        'email': TextEditingController(),
-        'phone': TextEditingController(),
+    if (memberControllers.length < 4) {
+      setState(() {
+        memberControllers.add({
+          'name': TextEditingController(),
+          'email': TextEditingController(),
+          'phone': TextEditingController(),
+        });
       });
-    });
+    }
   }
 
   void removeMember(int index) {
@@ -139,11 +141,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ),
                   );
                 }).toList(),
-                TextButton.icon(
-                  onPressed: addMember,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Member'),
-                ),
+                if (memberControllers.length < 4)
+                  TextButton.icon(
+                    onPressed: addMember,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Member'),
+                  ),
                 const SizedBox(height: 32),
                 Obx(() => CustomButton(
                   text: 'Submit Registration',

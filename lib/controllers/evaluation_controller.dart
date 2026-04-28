@@ -1,6 +1,7 @@
 import 'package:get/get.dart' hide Response;
 import '../core/api_service.dart';
 import '../models/evaluation_model.dart';
+import 'auth_controller.dart';
 import 'package:dio/dio.dart';
 
 class EvaluationController extends GetxController {
@@ -28,6 +29,7 @@ class EvaluationController extends GetxController {
   Future<void> submitEvaluation(String teamId) async {
     try {
       isLoading.value = true;
+      final AuthController authController = Get.find<AuthController>();
       
       Scores scores = Scores(
         idea: idea.value,
@@ -37,9 +39,13 @@ class EvaluationController extends GetxController {
         futureScope: futureScope.value
       );
 
-      Evaluation eval = Evaluation(teamId: teamId, scores: scores, totalScore: totalScore);
+      Map<String, dynamic> payload = {
+        'teamId': teamId,
+        'scores': scores.toJson(),
+        'supervisorId': authController.supervisorId.value,
+      };
 
-      Response response = await _apiService.post('/evaluate-team', eval.toJson());
+      Response response = await _apiService.post('/evaluate-team', payload);
       if (response.statusCode == 200) {
         Get.snackbar('Success', 'Evaluation submitted successfully');
         Get.offAllNamed('/dashboard');

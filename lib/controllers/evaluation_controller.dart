@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Response;
 import '../core/api_service.dart';
 import '../models/evaluation_model.dart';
 import 'package:dio/dio.dart';

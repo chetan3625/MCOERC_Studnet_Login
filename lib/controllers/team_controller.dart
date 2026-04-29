@@ -13,6 +13,7 @@ class TeamController extends GetxController {
   // Search data
   final searchResult = Rxn<Team>();
   final searchEvaluation = Rxn<Map<String, dynamic>>();
+  final isResultPublished = true.obs;
 
   // All Teams
   final allTeams = <Map<String, dynamic>>[].obs;
@@ -26,8 +27,13 @@ class TeamController extends GetxController {
         Get.offAllNamed('/success');
       }
     } on DioException catch (e) {
-      String message = e.response?.data['error'] ?? 'Registration failed';
-      Get.snackbar('Error', message, snackPosition: SnackPosition.BOTTOM);
+      String message = 'Registration failed';
+      if (e.type == DioExceptionType.connectionError || e.response == null) {
+        message = 'Connection blocked. Please allow the site in your browser (red icon in address bar) and try again.';
+      } else {
+        message = e.response?.data['error'] ?? 'Registration failed';
+      }
+      Get.snackbar('Error', message, snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 5));
     } finally {
       isLoading.value = false;
     }
@@ -42,6 +48,7 @@ class TeamController extends GetxController {
       Response response = await _apiService.get('/team/$teamId');
       if (response.statusCode == 200) {
         searchResult.value = Team.fromJson(response.data['team']);
+        isResultPublished.value = response.data['isPublished'] ?? true;
         if (response.data['evaluation'] != null) {
           searchEvaluation.value = response.data['evaluation'];
         }

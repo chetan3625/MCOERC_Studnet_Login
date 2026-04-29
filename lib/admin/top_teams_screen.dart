@@ -28,7 +28,14 @@ class _TopTeamsScreenState extends State<TopTeamsScreen> {
         }
 
         if (evalController.topTeams.isEmpty) {
-          return const Center(child: Text('No evaluations yet.'));
+          return Center(
+            child: Text(
+              evalController.message.value.isNotEmpty 
+                  ? evalController.message.value 
+                  : 'No evaluations yet.',
+              style: const TextStyle(fontSize: 18),
+            ),
+          );
         }
 
         return ListView.builder(

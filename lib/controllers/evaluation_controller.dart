@@ -15,6 +15,7 @@ class EvaluationController extends GetxController {
   final futureScope = 0.0.obs;
   
   final topTeams = [].obs;
+  final message = ''.obs;
 
   double get totalScore => idea.value + speech.value + problemSolution.value + presentation.value + futureScope.value;
 
@@ -64,6 +65,7 @@ class EvaluationController extends GetxController {
       Response response = await _apiService.get('/top-teams');
       if (response.statusCode == 200) {
         topTeams.value = response.data['topTeams'];
+        message.value = response.data['message'] ?? '';
       }
     } on DioException catch (e) {
       Get.snackbar('Error', e.message ?? 'Failed to fetch top teams');

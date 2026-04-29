@@ -19,32 +19,67 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Login'), centerTitle: true),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.admin_panel_settings, size: 100, color: Colors.blueGrey),
-              const SizedBox(height: 32),
-              CustomTextField(
-                label: 'Username',
-                controller: userCtrl,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1e3c72), Color(0xFF2a5298)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
+                ],
               ),
-              CustomTextField(
-                label: 'Password',
-                controller: passCtrl,
-                isPassword: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/logo.png', height: 100, errorBuilder: (c, e, s) => const Icon(Icons.admin_panel_settings, size: 80, color: Color(0xFF1e3c72))),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Admin Portal',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1e3c72)),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('Please login to continue', style: TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 32),
+                  CustomTextField(
+                    label: 'Username',
+                    controller: userCtrl,
+                  ),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: 'Password',
+                    controller: passCtrl,
+                    isPassword: true,
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: () => authController.login(userCtrl.text, passCtrl.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1e3c72),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 4,
+                      ),
+                      child: const Text('Login', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-              CustomButton(
-                text: 'Login',
-                onPressed: () {
-                  authController.login(userCtrl.text, passCtrl.text);
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),

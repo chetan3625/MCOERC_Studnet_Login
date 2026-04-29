@@ -63,6 +63,28 @@ class _ResultsPageState extends State<ResultsPage> {
                 }
 
                 final eval = teamController.searchEvaluation.value;
+                final isPublished = teamController.isResultPublished.value;
+
+                if (!isPublished) {
+                  return const Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Column(
+                        children: [
+                          Icon(Icons.timer, size: 48, color: Colors.orange),
+                          SizedBox(height: 16),
+                          Text(
+                            'Results will be announced soon!',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          Text('Evaluation is in progress. Please check back later.'),
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
                 return Card(
                   child: Padding(
@@ -79,11 +101,11 @@ class _ResultsPageState extends State<ResultsPage> {
                         else ...[
                           const Text('Evaluation Scores:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
-                          Text('Idea: ${eval['scores']['idea']}'),
-                          Text('Speech: ${eval['scores']['speech']}'),
-                          Text('Problem Solution: ${eval['scores']['problemSolution']}'),
-                          Text('Presentation: ${eval['scores']['presentation']}'),
-                          Text('Future Scope: ${eval['scores']['futureScope']}'),
+                          _scoreRow('Idea', eval['scores']?['idea'] ?? 0),
+                          _scoreRow('Speech', eval['scores']?['speech'] ?? 0),
+                          _scoreRow('Problem Solution', eval['scores']?['problemSolution'] ?? 0),
+                          _scoreRow('Presentation', eval['scores']?['presentation'] ?? 0),
+                          _scoreRow('Future Scope', eval['scores']?['futureScope'] ?? 0),
                           const Divider(height: 32),
                           Text(
                             'Total Score: ${eval['totalScore']}',
@@ -98,6 +120,19 @@ class _ResultsPageState extends State<ResultsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _scoreRow(String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 16)),
+          Text('$value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

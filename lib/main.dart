@@ -9,6 +9,7 @@ import 'admin/dashboard_screen.dart';
 import 'admin/search_result_screen.dart';
 import 'admin/evaluation_screen.dart';
 import 'admin/top_teams_screen.dart';
+import 'views/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -40,8 +41,9 @@ class HackathonApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         useMaterial3: true,
       ),
-      initialRoute: kIsWeb ? '/' : (isLogged ? '/dashboard' : '/admin-login'),
+      initialRoute: '/splash',
       getPages: [
+        GetPage(name: '/splash', page: () => const SplashScreen()),
         // Web routes
         GetPage(name: '/', page: () => const LandingPage()),
         GetPage(name: '/register', page: () => const RegistrationPage()),

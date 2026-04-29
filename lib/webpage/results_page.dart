@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/team_controller.dart';
-import '../views/custom_button.dart';
 import '../views/custom_text_field.dart';
 
 class ResultsPage extends StatefulWidget {
@@ -108,7 +107,7 @@ class _ResultsPageState extends State<ResultsPage> {
                           _scoreRow('Future Scope', eval['scores']?['futureScope'] ?? 0),
                           const Divider(height: 32),
                           Text(
-                            'Total Score: ${eval['totalScore']}',
+                            'Total Score: ${eval['totalScore']} / 50',
                             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
                           ),
                         ]

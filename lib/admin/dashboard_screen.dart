@@ -6,6 +6,7 @@ import '../controllers/team_controller.dart';
 import '../controllers/evaluation_controller.dart';
 import '../controllers/settings_controller.dart';
 import 'admin_management_screen.dart';
+import 'marks_overview_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -20,6 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TeamController teamController = Get.put(TeamController());
   final EvaluationController evaluationController = Get.put(EvaluationController());
   final SettingsController settingsController = Get.put(SettingsController());
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -30,12 +32,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const List<Widget> _titles = [
     Text('Pending Evaluations'),
     Text('Completed Evaluations'),
+    Text('Marks Assigned'),
     Text('Top 3 Performers'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    
+    final isSuperAdmin = authController.adminRole.value == 'super_admin';
+    final adminTabIndex = isSuperAdmin ? 4 : -1;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -48,7 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        title: _selectedIndex < _titles.length 
+        title: _selectedIndex < _titles.length
             ? _titles[_selectedIndex] 
             : const Text('Manage Admins'),
         foregroundColor: Colors.white,
@@ -76,19 +81,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
           )
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-        ),
-        child: Obx(() => IndexedStack(
-          index: _selectedIndex,
-          children: [
-            _buildPendingScreen(),
-            _buildCompletedScreen(),
-            _buildTopPerformersScreen(),
-            if (authController.adminRole.value == 'super_admin') const AdminManagementScreen(),
-          ],
-        )),
+      body: Column(
+        children: [
+          if (_selectedIndex < 2) _buildSearchWidget(),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+              ),
+              child: Obx(() => IndexedStack(
+                index: _selectedIndex,
+                children: [
+                  _buildPendingScreen(),
+                  _buildCompletedScreen(),
+                  const MarksOverviewScreen(),
+                  _buildTopPerformersScreen(),
+                  if (isSuperAdmin) const AdminManagementScreen(),
+                ],
+              )),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -101,8 +114,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onTap: (index) {
             setState(() {
               _selectedIndex = index;
+              _searchController.clear();
+              teamController.searchQuery.value = "";
             });
-            if (index < 3) teamController.fetchAllTeams();
+            if (index != adminTabIndex) teamController.fetchAllTeams();
           },
           selectedItemColor: const Color(0xFF1e3c72),
           unselectedItemColor: Colors.grey,
@@ -112,13 +127,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           items: [
             const BottomNavigationBarItem(icon: Icon(Icons.pending_actions), label: 'Pending'),
             const BottomNavigationBarItem(icon: Icon(Icons.assignment_turned_in), label: 'Completed'),
+            const BottomNavigationBarItem(icon: Icon(Icons.pie_chart_outline), label: 'Marks'),
             const BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Top 3'),
-            if (authController.adminRole.value == 'super_admin')
+            if (isSuperAdmin)
               const BottomNavigationBarItem(icon: Icon(Icons.people_alt), label: 'Admins'),
           ],
         )),
       ),
-      floatingActionButton: _selectedIndex == 3
+      floatingActionButton: _selectedIndex == adminTabIndex
           ? FloatingActionButton(
               onPressed: () => AdminManagementScreen.showAddDialog(context),
               backgroundColor: const Color(0xFF1e3c72),
@@ -139,12 +155,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final supervisorId = authController.supervisorId.value;
       final pendingTeams = teamController.allTeams.where((team) {
         final eval = team['evaluation'];
-        if (eval == null || eval['supervisorEvaluations'] == null) return true;
-        return eval['supervisorEvaluations'][supervisorId] == null;
+        bool isPending = false;
+        if (eval == null || eval['supervisorEvaluations'] == null) {
+          isPending = true;
+        } else {
+          isPending = eval['supervisorEvaluations'][supervisorId] == null;
+        }
+
+        if (!isPending) return false;
+
+        final query = teamController.searchQuery.value.toLowerCase();
+        if (query.isEmpty) return true;
+
+        final name = team['teamName'].toString().toLowerCase();
+        final id = team['teamId'].toString().toLowerCase();
+        return name.contains(query) || id.contains(query);
       }).toList();
 
       if (pendingTeams.isEmpty) {
-        return _buildEmptyState(Icons.check_circle_outline, 'All evaluations completed!', 'No pending teams to evaluate.');
+        return teamController.searchQuery.value.isEmpty
+            ? _buildEmptyState(Icons.check_circle_outline, 'All evaluations completed!', 'No pending teams to evaluate.')
+            : _buildEmptyState(Icons.search_off, 'No teams found', 'No team matches "${teamController.searchQuery.value}"');
       }
 
       return ListView.builder(
@@ -174,12 +205,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final supervisorId = authController.supervisorId.value;
       final completedTeams = teamController.allTeams.where((team) {
         final eval = team['evaluation'];
-        if (eval == null || eval['supervisorEvaluations'] == null) return false;
-        return eval['supervisorEvaluations'][supervisorId] != null;
+        bool isCompleted = false;
+        if (eval == null || eval['supervisorEvaluations'] == null) {
+          isCompleted = false;
+        } else {
+          isCompleted = eval['supervisorEvaluations'][supervisorId] != null;
+        }
+
+        if (!isCompleted) return false;
+
+        final query = teamController.searchQuery.value.toLowerCase();
+        if (query.isEmpty) return true;
+
+        final name = team['teamName'].toString().toLowerCase();
+        final id = team['teamId'].toString().toLowerCase();
+        return name.contains(query) || id.contains(query);
       }).toList();
 
       if (completedTeams.isEmpty) {
-        return _buildEmptyState(Icons.assignment_outlined, 'No evaluations yet', 'Start evaluating teams to see them here.');
+        return teamController.searchQuery.value.isEmpty
+            ? _buildEmptyState(Icons.assignment_outlined, 'No evaluations yet', 'Start evaluating teams to see them here.')
+            : _buildEmptyState(Icons.search_off, 'No teams found', 'No team matches "${teamController.searchQuery.value}"');
       }
 
       return ListView.builder(
@@ -192,8 +238,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             team: team,
             icon: Icons.pie_chart,
             iconColor: Colors.blue,
-            statusText: 'Score: ${myEval['total']}',
-            onTap: () => _showTeamDetailSheet(team, myEval, 'Your Evaluation'),
+            statusText: 'Score: ${myEval['total']} / 50',
+            onTap: () => _showTeamDetailSheet(team, team['evaluation'], 'Evaluation Insights'),
           );
         },
       );
@@ -264,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
-                  'Average Score: $score%',
+                  'Average Score: $score / 50',
                   style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -349,6 +395,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildSearchWidget() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (val) {
+            teamController.searchQuery.value = val;
+            setState(() {});
+          },
+          decoration: InputDecoration(
+            hintText: 'Search team name or ID...',
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+            prefixIcon: const Icon(Icons.search, color: Color(0xFF1e3c72), size: 22),
+            suffixIcon: _searchController.text.isNotEmpty 
+              ? IconButton(
+                  icon: const Icon(Icons.cancel, color: Colors.grey, size: 20),
+                  onPressed: () {
+                    _searchController.clear();
+                    teamController.searchQuery.value = "";
+                    setState(() {});
+                  },
+                )
+              : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(IconData icon, String title, String subtitle) {
     return Center(
       child: Column(
@@ -382,7 +471,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return <String, dynamic>{};
+  }
+
+  Map<String, dynamic> _resolveDisplayScores(Map<String, dynamic> scores) {
+    if (scores.containsKey('idea')) return scores;
+
+    final directScores = _asMap(scores['scores']);
+    if (directScores.isNotEmpty) return directScores;
+
+    final supervisorEvaluations = _asMap(scores['supervisorEvaluations']);
+    if (supervisorEvaluations.isEmpty) return <String, dynamic>{};
+
+    final values = supervisorEvaluations.values
+        .map((entry) => _asMap(entry))
+        .where((entry) => entry.isNotEmpty)
+        .toList();
+    if (values.isEmpty) return <String, dynamic>{};
+
+    num avg(String key) =>
+        values.fold<num>(0, (sum, item) => sum + ((item[key] ?? 0) as num)) /
+        values.length;
+
+    return {
+      'idea': avg('idea').round(),
+      'speech': avg('speech').round(),
+      'problemSolution': avg('problemSolution').round(),
+      'presentation': avg('presentation').round(),
+      'futureScope': avg('futureScope').round(),
+    };
+  }
+
   void _showTeamDetailSheet(Map<String, dynamic> team, Map<String, dynamic> scores, String title) {
+    final displayScores = _resolveDisplayScores(scores);
+    final supervisorEvaluations = _asMap(scores['supervisorEvaluations']);
+
     Get.bottomSheet(
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -406,11 +532,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 32),
               SizedBox(
                 height: 220,
-                child: _buildPieChart(scores),
+                child: _buildPieChart(displayScores),
               ),
               const SizedBox(height: 32),
-              _buildScoreBreakdown(scores),
+              _buildScoreBreakdown(displayScores),
               const SizedBox(height: 32),
+              if (supervisorEvaluations.isNotEmpty) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Admin Marks',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildAdminMarksGrid(supervisorEvaluations),
+                const SizedBox(height: 24),
+              ],
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -437,6 +579,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildAdminMarksGrid(Map<String, dynamic> supervisorEvaluations) {
+    final entries = supervisorEvaluations.entries.toList();
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 0.92,
+      ),
+      itemCount: entries.length,
+      itemBuilder: (context, index) {
+        final entry = entries[index];
+        final score = _asMap(entry.value);
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F9FD),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.blueGrey.shade50),
+          ),
+          child: Column(
+            children: [
+              Expanded(child: _buildPieChart(score)),
+              const SizedBox(height: 10),
+              Text(
+                entry.key,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e3c72),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${score['total'] ?? 0} / 50',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade700,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPieChart(Map<String, dynamic> data) {
     final Map<String, String> labels = {
       'idea': 'Idea',
@@ -457,13 +650,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int colorIndex = 0;
 
     labels.forEach((key, label) {
-      final value = (data[key] ?? 0).toDouble();
+      final raw = data[key];
+      final value = raw is num ? raw.toDouble() : 0.0;
       if (value > 0) {
         sections.add(PieChartSectionData(
           color: colors[colorIndex % colors.length],
           value: value,
           title: '$value',
-          radius: 70,
+          radius: 70.0,
           titleStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
           badgeWidget: _buildBadge(label, colors[colorIndex % colors.length]),
           badgePositionPercentageOffset: 1.1,

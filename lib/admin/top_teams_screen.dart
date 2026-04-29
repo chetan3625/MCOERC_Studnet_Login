@@ -54,7 +54,7 @@ class _TopTeamsScreenState extends State<TopTeamsScreen> {
                 title: Text(team['teamName'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 subtitle: Text('ID: ${team['teamId']}'),
                 trailing: Text(
-                  'Score: ${team['totalScore']}',
+                  'Score: ${team['totalScore']} / 50',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green),
                 ),
               ),

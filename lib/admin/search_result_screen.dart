@@ -30,7 +30,7 @@ class SearchResultScreen extends StatelessWidget {
             const Divider(height: 48),
             if (eval != null) ...[
               const Text('Already Evaluated:', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-              Text('Total Score: ${eval['totalScore']}'),
+              Text('Total Score: ${eval['totalScore']} / 50'),
               const SizedBox(height: 24),
             ],
             const Spacer(),

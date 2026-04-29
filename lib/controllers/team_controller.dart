@@ -17,6 +17,7 @@ class TeamController extends GetxController {
 
   // All Teams
   final allTeams = <Map<String, dynamic>>[].obs;
+  final searchQuery = "".obs;
 
   Future<void> registerTeam(Team team) async {
     try {

@@ -5,6 +5,7 @@ import '../controllers/auth_controller.dart';
 import '../controllers/team_controller.dart';
 import '../controllers/evaluation_controller.dart';
 import '../controllers/settings_controller.dart';
+import 'admin_management_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -34,6 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -46,7 +48,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        title: _titles[_selectedIndex],
+        title: _selectedIndex < _titles.length 
+            ? _titles[_selectedIndex] 
+            : const Text('Manage Admins'),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -76,14 +80,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: Colors.grey[50],
         ),
-        child: IndexedStack(
+        child: Obx(() => IndexedStack(
           index: _selectedIndex,
           children: [
             _buildPendingScreen(),
             _buildCompletedScreen(),
             _buildTopPerformersScreen(),
+            if (authController.adminRole.value == 'super_admin') const AdminManagementScreen(),
           ],
-        ),
+        )),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -91,31 +96,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 1),
           ],
         ),
-        child: BottomNavigationBar(
+        child: Obx(() => BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (index) {
             setState(() {
               _selectedIndex = index;
             });
-            teamController.fetchAllTeams();
+            if (index < 3) teamController.fetchAllTeams();
           },
           selectedItemColor: const Color(0xFF1e3c72),
           unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.pending_actions), label: 'Pending'),
-            BottomNavigationBarItem(icon: Icon(Icons.assignment_turned_in), label: 'Completed'),
-            BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Top 3'),
+          items: [
+            const BottomNavigationBarItem(icon: Icon(Icons.pending_actions), label: 'Pending'),
+            const BottomNavigationBarItem(icon: Icon(Icons.assignment_turned_in), label: 'Completed'),
+            const BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Top 3'),
+            if (authController.adminRole.value == 'super_admin')
+              const BottomNavigationBarItem(icon: Icon(Icons.people_alt), label: 'Admins'),
           ],
-        ),
+        )),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: teamController.fetchAllTeams,
-        backgroundColor: const Color(0xFF2a5298),
-        child: const Icon(Icons.refresh, color: Colors.white),
-      ),
+      floatingActionButton: _selectedIndex == 3
+          ? FloatingActionButton(
+              onPressed: () => AdminManagementScreen.showAddDialog(context),
+              backgroundColor: const Color(0xFF1e3c72),
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : FloatingActionButton(
+              onPressed: teamController.fetchAllTeams,
+              backgroundColor: const Color(0xFF2a5298),
+              child: const Icon(Icons.refresh, color: Colors.white),
+            ),
     );
   }
 

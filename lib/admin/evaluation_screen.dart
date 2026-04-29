@@ -64,14 +64,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
       _asMap(_teamEvaluation?['supervisorEvaluations']);
 
   void _prefillScores(Map<String, dynamic> myEval) {
-    evalController.idea.value = (myEval['idea'] as num?)?.toDouble() ?? 0;
-    evalController.speech.value = (myEval['speech'] as num?)?.toDouble() ?? 0;
-    evalController.problemSolution.value =
-        (myEval['problemSolution'] as num?)?.toDouble() ?? 0;
-    evalController.presentation.value =
-        (myEval['presentation'] as num?)?.toDouble() ?? 0;
-    evalController.futureScope.value =
-        (myEval['futureScope'] as num?)?.toDouble() ?? 0;
+    evalController.originality.value = (myEval['originality'] as num?)?.toDouble() ?? 0;
+    evalController.technical.value = (myEval['technical'] as num?)?.toDouble() ?? 0;
+    evalController.presentation.value = (myEval['presentation'] as num?)?.toDouble() ?? 0;
+    evalController.impact.value = (myEval['impact'] as num?)?.toDouble() ?? 0;
   }
 
   Map<String, dynamic> _asMap(dynamic data) {
@@ -473,23 +469,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
       ),
       child: Column(
         children: [
-          _buildSlider('Idea & Innovation', evalController.idea, Colors.blue),
-          _buildSlider(
-            'Speech & Communication',
-            evalController.speech,
-            Colors.green,
-          ),
-          _buildSlider(
-            'Problem Solution',
-            evalController.problemSolution,
-            Colors.orange,
-          ),
-          _buildSlider(
-            'Presentation Skills',
-            evalController.presentation,
-            Colors.purple,
-          ),
-          _buildSlider('Future Scope', evalController.futureScope, Colors.red),
+        _buildSlider('Originality of the problem statement', evalController.originality, Colors.blue, 10),
+        _buildSlider('Technical understanding and conclusion', evalController.technical, Colors.green, 20),
+        _buildSlider('Presentation Skills', evalController.presentation, Colors.purple, 10),
+        _buildSlider('Application and impact on society', evalController.impact, Colors.red, 10),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(24),
@@ -599,11 +582,10 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _marksRow('Idea', data['idea']),
-                    _marksRow('Speech', data['speech']),
-                    _marksRow('Solution', data['problemSolution']),
-                    _marksRow('Presentation', data['presentation']),
-                    _marksRow('Future', data['futureScope']),
+                    _marksRow('Originality', data['originality'], 10),
+                    _marksRow('Technical', data['technical'], 20),
+                    _marksRow('Presentation', data['presentation'], 10),
+                    _marksRow('Impact', data['impact'], 10),
                     const Divider(height: 20),
                     Text(
                       'Total: ${data['total'] ?? 0} / 50',
@@ -622,16 +604,16 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     );
   }
 
-  Widget _marksRow(String label, dynamic value) {
+  Widget _marksRow(String label, dynamic value, int max) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade700)),
+          Text(label, style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
           Text(
-            '${value ?? 0}',
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            '${value ?? 0} / $max',
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           ),
         ],
       ),
@@ -666,7 +648,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
     );
   }
 
-  Widget _buildSlider(String label, RxDouble value, Color color) {
+  Widget _buildSlider(String label, RxDouble value, Color color, double max) {
     return Container(
       margin: const EdgeInsets.only(bottom: 22),
       child: Column(
@@ -695,7 +677,7 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${value.value.toInt()} / 10',
+                    '${value.value.toInt()} / ${max.toInt()}',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -711,8 +693,8 @@ class _EvaluationScreenState extends State<EvaluationScreen> {
             () => Slider(
               value: value.value,
               min: 0,
-              max: 10,
-              divisions: 10,
+              max: max,
+              divisions: max.toInt(),
               activeColor: color,
               inactiveColor: color.withOpacity(0.14),
               onChanged: (val) => value.value = val,

@@ -83,22 +83,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: Column(
         children: [
-          if (_selectedIndex < 2) _buildSearchWidget(),
+          if (_selectedIndex < 3) _buildSearchWidget(),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey[50],
               ),
-              child: Obx(() => IndexedStack(
+              child: IndexedStack(
                 index: _selectedIndex,
                 children: [
                   _buildPendingScreen(),
                   _buildCompletedScreen(),
                   const MarksOverviewScreen(),
                   _buildTopPerformersScreen(),
-                  if (isSuperAdmin) const AdminManagementScreen(),
+                  if (authController.adminRole.value == 'super_admin') const AdminManagementScreen(),
                 ],
-              )),
+              ),
             ),
           ),
         ],
@@ -109,7 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 1),
           ],
         ),
-        child: Obx(() => BottomNavigationBar(
+        child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (index) {
             setState(() {
@@ -129,10 +129,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const BottomNavigationBarItem(icon: Icon(Icons.assignment_turned_in), label: 'Completed'),
             const BottomNavigationBarItem(icon: Icon(Icons.pie_chart_outline), label: 'Marks'),
             const BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Top 3'),
-            if (isSuperAdmin)
+            if (authController.adminRole.value == 'super_admin')
               const BottomNavigationBarItem(icon: Icon(Icons.people_alt), label: 'Admins'),
           ],
-        )),
+        ),
       ),
       floatingActionButton: _selectedIndex == adminTabIndex
           ? FloatingActionButton(
@@ -239,7 +239,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icons.pie_chart,
             iconColor: Colors.blue,
             statusText: 'Score: ${myEval['total']} / 50',
-            onTap: () => _showTeamDetailSheet(team, team['evaluation'], 'Evaluation Insights'),
+            onTap: () => Get.toNamed('/team-details', arguments: {
+              'team': team,
+              'scores': team['evaluation'],
+              'title': 'Evaluation Insights',
+            }),
           );
         },
       );
@@ -315,7 +319,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-              onTap: () => _showTeamDetailSheet(team, team['evaluation'], 'Average Performance'),
+              onTap: () => Get.toNamed('/team-details', arguments: {
+                'team': team,
+                'scores': team['evaluation'],
+                'title': 'Average Performance',
+              }),
             ),
           );
         },
@@ -505,222 +513,5 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
   }
 
-  void _showTeamDetailSheet(Map<String, dynamic> team, Map<String, dynamic> scores, String title) {
-    final displayScores = _resolveDisplayScores(scores);
-    final supervisorEvaluations = _asMap(scores['supervisorEvaluations']);
 
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 5,
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
-              ),
-              const SizedBox(height: 24),
-              Text(team['teamName'], style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text(title, style: TextStyle(fontSize: 16, color: Colors.blue.shade700, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 32),
-              SizedBox(
-                height: 220,
-                child: _buildPieChart(displayScores),
-              ),
-              const SizedBox(height: 32),
-              _buildScoreBreakdown(displayScores),
-              const SizedBox(height: 32),
-              if (supervisorEvaluations.isNotEmpty) ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Admin Marks',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade900,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildAdminMarksGrid(supervisorEvaluations),
-                const SizedBox(height: 24),
-              ],
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Project Title', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    Text(team['projectTitle'], style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-    );
-  }
-
-  Widget _buildAdminMarksGrid(Map<String, dynamic> supervisorEvaluations) {
-    final entries = supervisorEvaluations.entries.toList();
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 0.92,
-      ),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final entry = entries[index];
-        final score = _asMap(entry.value);
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF7F9FD),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.blueGrey.shade50),
-          ),
-          child: Column(
-            children: [
-              Expanded(child: _buildPieChart(score)),
-              const SizedBox(height: 10),
-              Text(
-                entry.key,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1e3c72),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${score['total'] ?? 0} / 50',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue.shade700,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPieChart(Map<String, dynamic> data) {
-    final Map<String, String> labels = {
-      'idea': 'Idea',
-      'speech': 'Speech',
-      'problemSolution': 'Solution',
-      'presentation': 'Present',
-      'futureScope': 'Future',
-    };
-
-    final List<PieChartSectionData> sections = [];
-    final List<Color> colors = [
-      const Color(0xFF4facfe),
-      const Color(0xFF43e97b),
-      const Color(0xFFfa709a),
-      const Color(0xFFf6d365),
-      const Color(0xFF667eea),
-    ];
-    int colorIndex = 0;
-
-    labels.forEach((key, label) {
-      final raw = data[key];
-      final value = raw is num ? raw.toDouble() : 0.0;
-      if (value > 0) {
-        sections.add(PieChartSectionData(
-          color: colors[colorIndex % colors.length],
-          value: value,
-          title: '$value',
-          radius: 70.0,
-          titleStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
-          badgeWidget: _buildBadge(label, colors[colorIndex % colors.length]),
-          badgePositionPercentageOffset: 1.1,
-        ));
-        colorIndex++;
-      }
-    });
-
-    if (sections.isEmpty) return const Center(child: Text('No score data available'));
-
-    return PieChart(
-      PieChartData(
-        sections: sections,
-        centerSpaceRadius: 40,
-        sectionsSpace: 4,
-      ),
-    );
-  }
-
-  Widget _buildBadge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _buildScoreBreakdown(Map<String, dynamic> data) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      alignment: WrapAlignment.center,
-      children: [
-        _scoreChip('Idea', data['idea'], const Color(0xFF4facfe)),
-        _scoreChip('Speech', data['speech'], const Color(0xFF43e97b)),
-        _scoreChip('Solution', data['problemSolution'], const Color(0xFFfa709a)),
-        _scoreChip('Presentation', data['presentation'], const Color(0xFFf6d365)),
-        _scoreChip('Future', data['futureScope'], const Color(0xFF667eea)),
-      ],
-    );
-  }
-
-  Widget _scoreChip(String label, dynamic value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 8),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text('${value ?? 0}', style: TextStyle(fontWeight: FontWeight.bold, color: color)),
-        ],
-      ),
-    );
-  }
 }

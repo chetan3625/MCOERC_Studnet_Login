@@ -8,23 +8,21 @@ class EvaluationController extends GetxController {
   final ApiService _apiService = ApiService();
   final isLoading = false.obs;
   
-  final idea = 0.0.obs;
-  final speech = 0.0.obs;
-  final problemSolution = 0.0.obs;
+  final originality = 0.0.obs;
+  final technical = 0.0.obs;
   final presentation = 0.0.obs;
-  final futureScope = 0.0.obs;
+  final impact = 0.0.obs;
   
   final topTeams = [].obs;
   final message = ''.obs;
 
-  double get totalScore => idea.value + speech.value + problemSolution.value + presentation.value + futureScope.value;
+  double get totalScore => originality.value + technical.value + presentation.value + impact.value;
 
   void resetScores() {
-    idea.value = 0;
-    speech.value = 0;
-    problemSolution.value = 0;
+    originality.value = 0;
+    technical.value = 0;
     presentation.value = 0;
-    futureScope.value = 0;
+    impact.value = 0;
   }
 
   Future<void> submitEvaluation(String teamId) async {
@@ -33,11 +31,10 @@ class EvaluationController extends GetxController {
       final AuthController authController = Get.find<AuthController>();
       
       Scores scores = Scores(
-        idea: idea.value,
-        speech: speech.value,
-        problemSolution: problemSolution.value,
+        originality: originality.value,
+        technical: technical.value,
         presentation: presentation.value,
-        futureScope: futureScope.value
+        impact: impact.value,
       );
 
       Map<String, dynamic> payload = {

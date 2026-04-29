@@ -22,17 +22,39 @@ class MarksOverviewScreen extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       }
 
+      final query = teamController.searchQuery.value.toLowerCase();
       final evaluatedTeams = teamController.allTeams
           .where((team) => team['evaluation'] != null)
+          .where((team) {
+            if (query.isEmpty) return true;
+            final name = (team['teamName'] ?? '').toString().toLowerCase();
+            final id = (team['teamId'] ?? '').toString().toLowerCase();
+            return name.contains(query) || id.contains(query);
+          })
           .toList();
 
       if (evaluatedTeams.isEmpty) {
+        if (query.isNotEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.search_off, size: 72, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  'No teams found for "$query"',
+                  style: const TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+              ],
+            ),
+          );
+        }
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
               Icon(Icons.insights_outlined, size: 72, color: Colors.grey),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'No marks assigned yet',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -60,7 +82,10 @@ class MarksOverviewScreen extends StatelessWidget {
               final supervisorEvals = _asMap(evaluation['supervisorEvaluations']);
               return InkWell(
                 borderRadius: BorderRadius.circular(24),
-                onTap: () => _showMarksSheet(team),
+                onTap: () => Get.toNamed('/team-details', arguments: {
+                  'team': team,
+                  'title': 'Marks Assigned by Admins',
+                }),
                 child: Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
@@ -127,109 +152,7 @@ class MarksOverviewScreen extends StatelessWidget {
     });
   }
 
-  void _showMarksSheet(Map<String, dynamic> team) {
-    final evaluation = _asMap(team['evaluation']);
-    final supervisorEvals = _asMap(evaluation['supervisorEvaluations']);
-    final entries = supervisorEvals.entries.toList();
 
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              team['teamName'] ?? 'Unknown Team',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e3c72),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Marks assigned by admins',
-              style: TextStyle(
-                color: Colors.blue.shade700,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: Get.height * 0.62,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final crossAxisCount = constraints.maxWidth < 700 ? 1 : 2;
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: crossAxisCount == 1 ? 2.2 : 0.84,
-                    ),
-                    itemCount: entries.length,
-                    itemBuilder: (context, index) {
-                      final entry = entries[index];
-                      final score = _asMap(entry.value);
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF7F9FD),
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: Colors.blueGrey.shade50),
-                        ),
-                        child: Column(
-                          children: [
-                            Expanded(child: _buildAdminPieChart(score)),
-                            const SizedBox(height: 12),
-                            Text(
-                              entry.key,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1e3c72),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${score['total'] ?? 0} / 50',
-                              style: TextStyle(
-                                color: Colors.blue.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-    );
-  }
 
   Widget _buildTeamScoreChart(Map<String, dynamic> evaluation) {
     final avgScores = _asMap(evaluation['scores']);
@@ -241,9 +164,7 @@ class MarksOverviewScreen extends StatelessWidget {
     return _buildPieChart(chartSource, showLabels: false);
   }
 
-  Widget _buildAdminPieChart(Map<String, dynamic> score) {
-    return _buildPieChart(score, showLabels: true);
-  }
+
 
   Widget _buildPieChart(Map<String, dynamic> data, {required bool showLabels}) {
     final labels = <String, String>{

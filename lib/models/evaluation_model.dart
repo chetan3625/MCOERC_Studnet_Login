@@ -22,33 +22,29 @@ class Evaluation {
 }
 
 class Scores {
-  num idea;
-  num speech;
-  num problemSolution;
+  num originality;
+  num technical;
   num presentation;
-  num futureScope;
+  num impact;
 
   Scores({
-    required this.idea,
-    required this.speech,
-    required this.problemSolution,
+    required this.originality,
+    required this.technical,
     required this.presentation,
-    required this.futureScope,
+    required this.impact,
   });
 
   Map<String, dynamic> toJson() => {
-    'idea': idea,
-    'speech': speech,
-    'problemSolution': problemSolution,
+    'originality': originality,
+    'technical': technical,
     'presentation': presentation,
-    'futureScope': futureScope,
+    'impact': impact,
   };
 
   factory Scores.fromJson(Map<String, dynamic> json) => Scores(
-    idea: json['idea'] ?? 0,
-    speech: json['speech'] ?? 0,
-    problemSolution: json['problemSolution'] ?? 0,
+    originality: json['originality'] ?? 0,
+    technical: json['technical'] ?? 0,
     presentation: json['presentation'] ?? 0,
-    futureScope: json['futureScope'] ?? 0,
+    impact: json['impact'] ?? 0,
   );
 }

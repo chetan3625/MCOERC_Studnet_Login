@@ -11,34 +11,6 @@ class TeamDetailsScreen extends StatelessWidget {
     return <String, dynamic>{};
   }
 
-  Map<String, dynamic> _resolveDisplayScores(Map<String, dynamic> scores) {
-    if (scores.containsKey('idea')) return scores;
-
-    final directScores = _asMap(scores['scores']);
-    if (directScores.isNotEmpty) return directScores;
-
-    final supervisorEvaluations = _asMap(scores['supervisorEvaluations']);
-    if (supervisorEvaluations.isEmpty) return <String, dynamic>{};
-
-    final values = supervisorEvaluations.values
-        .map((entry) => _asMap(entry))
-        .where((entry) => entry.isNotEmpty)
-        .toList();
-    if (values.isEmpty) return <String, dynamic>{};
-
-    num avg(String key) =>
-        values.fold<num>(0, (sum, item) => sum + ((item[key] ?? 0) as num)) /
-        values.length;
-
-    return {
-      'idea': avg('idea').round(),
-      'speech': avg('speech').round(),
-      'problemSolution': avg('problemSolution').round(),
-      'presentation': avg('presentation').round(),
-      'futureScope': avg('futureScope').round(),
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> args = (Get.arguments is Map) ? Map<String, dynamic>.from(Get.arguments) : {};

@@ -93,6 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
               /////////
+              
               ////////
               child: IndexedStack(
                 index: _selectedIndex,
@@ -274,10 +275,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final top3 = evaluatedTeams.take(3).toList();
 
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        itemCount: top3.length,
-        itemBuilder: (context, index) {
+      return Column(
+        children: [
+          if (authController.adminRole.value == 'super_admin')
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Get.dialog(
+                    AlertDialog(
+                      title: const Text('Distribute Certificates'),
+                      content: const Text('Are you sure you want to generate and email certificates to all students?'),
+                      actions: [
+                        TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+                        ElevatedButton(
+                          onPressed: () {
+                            Get.back();
+                            settingsController.distributeCertificates();
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                          child: const Text('Distribute'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.send),
+                label: const Text('Distribute Certificates to All'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              itemCount: top3.length,
+              itemBuilder: (context, index) {
           final team = top3[index];
           final score = team['evaluation']['totalScore'];
           return Container(
@@ -332,7 +369,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         },
-      );
+      ),
+    ),
+  ],
+);
     });
   }
 
@@ -400,10 +440,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
                   ],
                 ),
+                if (authController.adminRole.value == 'super_admin') ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
+                    onPressed: () => _showDeleteTeamDialog(context, team),
+                  ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteTeamDialog(BuildContext context, Map<String, dynamic> team) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Team'),
+        content: Text('Are you sure you want to delete "${team['teamName']}"? This will also remove all associated evaluations.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              teamController.deleteTeam(team['teamId']);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
@@ -490,33 +558,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return <String, dynamic>{};
   }
 
-  Map<String, dynamic> _resolveDisplayScores(Map<String, dynamic> scores) {
-    if (scores.containsKey('idea')) return scores;
-
-    final directScores = _asMap(scores['scores']);
-    if (directScores.isNotEmpty) return directScores;
-
-    final supervisorEvaluations = _asMap(scores['supervisorEvaluations']);
-    if (supervisorEvaluations.isEmpty) return <String, dynamic>{};
-
-    final values = supervisorEvaluations.values
-        .map((entry) => _asMap(entry))
-        .where((entry) => entry.isNotEmpty)
-        .toList();
-    if (values.isEmpty) return <String, dynamic>{};
-
-    num avg(String key) =>
-        values.fold<num>(0, (sum, item) => sum + ((item[key] ?? 0) as num)) /
-        values.length;
-
-    return {
-      'idea': avg('idea').round(),
-      'speech': avg('speech').round(),
-      'problemSolution': avg('problemSolution').round(),
-      'presentation': avg('presentation').round(),
-      'futureScope': avg('futureScope').round(),
-    };
-  }
 
 
 }

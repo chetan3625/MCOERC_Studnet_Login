@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/team_controller.dart';
+import '../controllers/auth_controller.dart';
 
 class MarksOverviewScreen extends StatelessWidget {
   const MarksOverviewScreen({Key? key}) : super(key: key);
@@ -16,6 +17,7 @@ class MarksOverviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TeamController teamController = Get.find<TeamController>();
+    final AuthController authController = Get.find<AuthController>();
 
     return Obx(() {
       if (teamController.isLoading.value) {
@@ -102,20 +104,36 @@ class MarksOverviewScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        team['teamName'] ?? 'Unknown Team',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1e3c72),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        team['teamId'] ?? '',
-                        style: TextStyle(color: Colors.grey.shade600),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  team['teamName'] ?? 'Unknown Team',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1e3c72),
+                                  ),
+                                ),
+                                Text(
+                                  team['teamId'] ?? '',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (authController.adminRole.value == 'super_admin')
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                              onPressed: () => _showDeleteDialog(context, teamController, team),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 14),
                       Expanded(
@@ -152,27 +170,60 @@ class MarksOverviewScreen extends StatelessWidget {
     });
   }
 
-
-
-  Widget _buildTeamScoreChart(Map<String, dynamic> evaluation) {
-    final avgScores = _asMap(evaluation['scores']);
-    final supervisorMap = _asMap(evaluation['supervisorEvaluations']);
-    final firstScore = supervisorMap.values.isNotEmpty
-        ? _asMap(supervisorMap.values.first)
-        : <String, dynamic>{};
-    final chartSource = avgScores.isNotEmpty ? avgScores : firstScore;
-    return _buildPieChart(chartSource, showLabels: false);
+  void _showDeleteDialog(BuildContext context, TeamController controller, Map<String, dynamic> team) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Delete Team'),
+        content: Text('Are you sure you want to delete "${team['teamName']}"?'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.deleteTeam(team['teamId']);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
+  Widget _buildTeamScoreChart(Map<String, dynamic> evaluation) {
+    final supervisorMap = _asMap(evaluation['supervisorEvaluations']);
+    
+    // Calculate average scores for the chart
+    final evals = supervisorMap.values.toList();
+    if (evals.isEmpty) return const Center(child: Text('No evaluations'));
+    
+    final Map<String, double> avgScores = {
+      'originality': 0.0,
+      'technical': 0.0,
+      'presentation': 0.0,
+      'impact': 0.0,
+    };
+    
+    for (var e in evals) {
+      final s = _asMap(e);
+      avgScores['originality'] = (avgScores['originality'] ?? 0) + (s['originality'] ?? 0);
+      avgScores['technical'] = (avgScores['technical'] ?? 0) + (s['technical'] ?? 0);
+      avgScores['presentation'] = (avgScores['presentation'] ?? 0) + (s['presentation'] ?? 0);
+      avgScores['impact'] = (avgScores['impact'] ?? 0) + (s['impact'] ?? 0);
+    }
+    
+    avgScores.updateAll((key, value) => value / evals.length);
 
+    return _buildPieChart(avgScores, showLabels: false);
+  }
 
   Widget _buildPieChart(Map<String, dynamic> data, {required bool showLabels}) {
     final labels = <String, String>{
-      'idea': 'Idea',
-      'speech': 'Speech',
-      'problemSolution': 'Solution',
+      'originality': 'Originality',
+      'technical': 'Technical',
       'presentation': 'Present',
-      'futureScope': 'Future',
+      'impact': 'Impact',
     };
 
     final colors = <Color>[
@@ -180,7 +231,6 @@ class MarksOverviewScreen extends StatelessWidget {
       const Color(0xFF43e97b),
       const Color(0xFFfa709a),
       const Color(0xFFf6d365),
-      const Color(0xFF667eea),
     ];
 
     final sections = <PieChartSectionData>[];
@@ -208,7 +258,7 @@ class MarksOverviewScreen extends StatelessWidget {
     });
 
     if (sections.isEmpty) {
-      return const Center(child: Text('No score data'));
+      return const Center(child: Text('No score data', style: TextStyle(fontSize: 12, color: Colors.grey)));
     }
 
     return Column(
@@ -222,33 +272,6 @@ class MarksOverviewScreen extends StatelessWidget {
             ),
           ),
         ),
-        if (showLabels) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: labels.entries.map((entry) {
-              final index = labels.keys.toList().indexOf(entry.key);
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colors[index].withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  entry.value,
-                  style: TextStyle(
-                    color: colors[index],
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
       ],
     );
   }

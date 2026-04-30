@@ -1,24 +1,47 @@
-class Evaluation {
+class EvaluationModel {
   String teamId;
-  Scores scores;
+  Map<String, Scores> supervisorEvaluations;
   num totalScore;
+  DateTime? updatedAt;
 
-  Evaluation({
+  EvaluationModel({
     required this.teamId,
-    required this.scores,
+    required this.supervisorEvaluations,
     required this.totalScore,
+    this.updatedAt,
   });
 
-  Map<String, dynamic> toJson() => {
-    'teamId': teamId,
-    'scores': scores.toJson(),
-  };
+  factory EvaluationModel.fromJson(Map<String, dynamic> json) {
+    Map<String, Scores> evaluations = {};
+    if (json['supervisorEvaluations'] != null) {
+      if (json['supervisorEvaluations'] is Map) {
+        (json['supervisorEvaluations'] as Map).forEach((key, value) {
+          evaluations[key] = Scores.fromJson(value);
+        });
+      }
+    }
 
-  factory Evaluation.fromJson(Map<String, dynamic> json) => Evaluation(
-    teamId: json['teamId'],
-    scores: Scores.fromJson(json['scores'] ?? {}),
-    totalScore: json['totalScore'] ?? 0,
-  );
+    return EvaluationModel(
+      teamId: json['teamId'] ?? '',
+      supervisorEvaluations: evaluations,
+      totalScore: json['totalScore'] ?? 0,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> supervisorEvalsJson = {};
+    supervisorEvaluations.forEach((key, value) {
+      supervisorEvalsJson[key] = value.toJson();
+    });
+
+    return {
+      'teamId': teamId,
+      'supervisorEvaluations': supervisorEvalsJson,
+      'totalScore': totalScore,
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
 }
 
 class Scores {
@@ -26,12 +49,14 @@ class Scores {
   num technical;
   num presentation;
   num impact;
+  num? total;
 
   Scores({
     required this.originality,
     required this.technical,
     required this.presentation,
     required this.impact,
+    this.total,
   });
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +64,7 @@ class Scores {
     'technical': technical,
     'presentation': presentation,
     'impact': impact,
+    'total': total,
   };
 
   factory Scores.fromJson(Map<String, dynamic> json) => Scores(
@@ -46,5 +72,6 @@ class Scores {
     technical: json['technical'] ?? 0,
     presentation: json['presentation'] ?? 0,
     impact: json['impact'] ?? 0,
+    total: json['total'] ?? 0,
   );
 }

@@ -76,4 +76,25 @@ class AdminController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> distributeCertificates() async {
+    try {
+      isLoading.value = true;
+      Response response = await _apiService.post('/distribute-certificates', {});
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          'Success', 
+          'Certificate distribution triggered: ${response.data['emailsQueued']} emails queued.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 5),
+        );
+      }
+    } on DioException catch (e) {
+      Get.snackbar('Error', e.response?.data['error'] ?? 'Failed to distribute certificates');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

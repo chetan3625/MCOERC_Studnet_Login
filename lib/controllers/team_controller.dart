@@ -75,4 +75,19 @@ class TeamController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> deleteTeam(String teamId) async {
+    try {
+      isLoading.value = true;
+      Response response = await _apiService.delete('/team/$teamId');
+      if (response.statusCode == 200) {
+        fetchAllTeams();
+        Get.snackbar('Success', 'Team deleted successfully');
+      }
+    } on DioException catch (e) {
+      Get.snackbar('Error', e.response?.data['error'] ?? 'Failed to delete team');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

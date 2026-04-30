@@ -46,4 +46,31 @@ class SettingsController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  Future<void> distributeCertificates() async {
+    try {
+      isLoading.value = true;
+      Get.snackbar('Processing', 'Generating and sending certificates...', 
+        showProgressIndicator: true, 
+        duration: const Duration(seconds: 2),
+        snackPosition: SnackPosition.BOTTOM
+      );
+      
+      final response = await _apiService.post('/distribute-certificates', {});
+      
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          'Success', 
+          'Certificates distributed: ${response.data['sent']} sent, ${response.data['errors']} failed.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white
+        );
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to distribute certificates', snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

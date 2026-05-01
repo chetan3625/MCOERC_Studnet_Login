@@ -12,6 +12,8 @@ class AdminController extends GetxController {
 
   var totalCertificates = 0.obs;
   var distributedCertificates = 0.obs;
+  var sentCertificates = 0.obs;
+  var failedCertificates = 0.obs;
   var isDistributing = false.obs;
   Timer? _progressTimer;
 
@@ -157,7 +159,13 @@ class AdminController extends GetxController {
                   Column(
                     children: [
                       const Text('Sent', style: TextStyle(color: Colors.grey, fontSize: 14)),
-                      Text('${distributedCertificates.value}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blue)),
+                      Text('${sentCertificates.value}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blue)),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('Failed', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                      Text('${failedCertificates.value}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.red)),
                     ],
                   ),
                   Column(
@@ -200,6 +208,8 @@ class AdminController extends GetxController {
         Response response = await _apiService.get('/distribution-progress');
         if (response.statusCode == 200) {
           distributedCertificates.value = response.data['processedCount'] ?? 0;
+          sentCertificates.value = response.data['sentCount'] ?? 0;
+          failedCertificates.value = response.data['failedCount'] ?? 0;
           
           if (distributedCertificates.value >= totalCertificates.value && totalCertificates.value > 0) {
             timer.cancel();

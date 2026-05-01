@@ -16,10 +16,10 @@ class LandingPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(Icons.code, size: 100, color: Colors.blueAccent),
+              Image.asset('assets/logo.png', width: 100, height: 100),
               const SizedBox(height: 24),
               const Text(
-                'Hackathon Registration',
+                'Project Competition Registration',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),

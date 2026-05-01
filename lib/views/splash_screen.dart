@@ -89,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 ),
                 const SizedBox(height: 30),
                 const Text(
-                  'MATOSHRI HACKATHON',
+                  'MATOSHRI PROJECT COMPETITION',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,

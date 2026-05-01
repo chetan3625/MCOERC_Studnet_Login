@@ -123,7 +123,7 @@ class EvaluationController extends GetxController {
             return [
               pw.Header(
                 level: 0,
-                child: pw.Text('Hackathon Result Receipt', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                child: pw.Text('Project Competition Result Receipt', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
               ),
               pw.SizedBox(height: 20),
               pw.Text('Top 3 Performers', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.blueAccent)),

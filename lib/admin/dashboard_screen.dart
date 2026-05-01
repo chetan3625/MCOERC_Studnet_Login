@@ -279,35 +279,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           if (authController.adminRole.value == 'super_admin')
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Get.dialog(
-                    AlertDialog(
-                      title: const Text('Distribute Certificates'),
-                      content: const Text('Are you sure you want to generate and email certificates to all students?'),
-                      actions: [
-                        TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-                        ElevatedButton(
-                          onPressed: () {
-                            Get.back();
-                            settingsController.distributeCertificates();
-                          },
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                          child: const Text('Distribute'),
-                        ),
-                      ],
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Get.dialog(
+                          AlertDialog(
+                            title: const Text('Distribute Certificates'),
+                            content: const Text('Are you sure you want to generate and email certificates to all students?'),
+                            actions: [
+                              TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Get.back();
+                                  settingsController.distributeCertificates();
+                                },
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                                child: const Text('Distribute'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.send),
+                      label: const Text('Email Certificates'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.send),
-                label: const Text('Distribute Certificates to All'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => evaluationController.generateAndPrintReceipt(),
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text('Generate PDF'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           Expanded(

@@ -8,8 +8,8 @@ class ApiService {
   ApiService() {
     BaseOptions options = BaseOptions(
       baseUrl: 'https://matoshri-hackathon-backend.onrender.com/api',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 120),
+      receiveTimeout: const Duration(seconds: 120),
     );
     _dio = Dio(options);
     

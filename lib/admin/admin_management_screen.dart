@@ -154,7 +154,6 @@ class AdminManagementScreen extends StatelessWidget {
       ),
     );
   }
-  }
 
   static void _showAdminDialog(BuildContext context, AdminController controller, {AdminModel? admin}) {
     final isEdit = admin != null;

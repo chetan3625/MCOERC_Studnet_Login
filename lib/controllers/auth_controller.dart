@@ -23,23 +23,23 @@ class AuthController extends GetxController {
     token.value = prefs.getString('token') ?? '';
   }
 
+  Future<void> loginAsSuperAdmin() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('supervisorId', 'superadmin');
+    await prefs.setString('adminRole', 'super_admin');
+    await prefs.setString('token', 'static-superadmin-token');
+
+    isLoggedIn.value = true;
+    supervisorId.value = 'superadmin';
+    adminRole.value = 'super_admin';
+    token.value = 'static-superadmin-token';
+
+    Get.offAllNamed('/dashboard');
+  }
+
   Future<void> login(String username, String password) async {
-    if (username == 'superadmin' && password == '1') {
-      final prefs = await SharedPreferences.getInstance();
-      
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('supervisorId', 'superadmin');
-      await prefs.setString('adminRole', 'super_admin');
-      await prefs.setString('token', 'static-superadmin-token');
-
-      isLoggedIn.value = true;
-      supervisorId.value = 'superadmin';
-      adminRole.value = 'super_admin';
-      token.value = 'static-superadmin-token';
-
-      Get.offAllNamed('/dashboard');
-      return;
-    }
 
     try {
       final response = await _apiService.post('/admin/login', {

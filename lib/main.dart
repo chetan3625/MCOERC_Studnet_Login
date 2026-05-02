@@ -11,6 +11,7 @@ import 'admin/evaluation_screen.dart';
 import 'admin/top_teams_screen.dart';
 import 'admin/admin_management_screen.dart';
 import 'admin/team_details_screen.dart';
+import 'admin/system_logs_screen.dart';
 import 'views/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
@@ -60,6 +61,7 @@ class HackathonApp extends StatelessWidget {
         GetPage(name: '/top-teams', page: () => const TopTeamsScreen()),
         GetPage(name: '/admin-management', page: () => const AdminManagementScreen()),
         GetPage(name: '/team-details', page: () => const TeamDetailsScreen()),
+        GetPage(name: '/system-logs', page: () => const SystemLogsScreen()),
       ],
       debugShowCheckedModeBanner: false,
     );

@@ -7,7 +7,7 @@ class ApiService {
 
   ApiService() {
     BaseOptions options = BaseOptions(
-      baseUrl: 'https://matoshri-hackathon-backend.onrender.com/api',
+      baseUrl: 'https://matoshri-hackathon-backend-1.onrender.com/api',
       connectTimeout: const Duration(seconds: 120),
       receiveTimeout: const Duration(seconds: 120),
     );
@@ -23,8 +23,30 @@ class ApiService {
         return handler.next(options);
       },
       onError: (DioException e, handler) {
-        debugPrint('API Error: ${e.message}');
-        return handler.next(e);
+        String message = 'An unexpected error occurred';
+        
+        if (e.type == DioExceptionType.connectionTimeout || 
+            e.type == DioExceptionType.receiveTimeout || 
+            e.type == DioExceptionType.sendTimeout) {
+          message = 'Connection timed out. Please check your internet.';
+        } else if (e.type == DioExceptionType.connectionError || 
+                   e.message?.contains('SocketException') == true ||
+                   e.message?.contains('Failed host lookup') == true) {
+          message = 'Server unreachable. Please check your internet or backend status.';
+        } else if (e.response != null) {
+          message = e.response?.data['error'] ?? 'Server error: ${e.response?.statusCode}';
+        }
+
+        // Add user-friendly message to the error
+        final customError = DioException(
+          requestOptions: e.requestOptions,
+          response: e.response,
+          type: e.type,
+          error: e.error,
+          message: message,
+        );
+        
+        return handler.next(customError);
       },
     ));
   }

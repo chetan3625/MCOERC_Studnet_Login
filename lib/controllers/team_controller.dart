@@ -70,7 +70,44 @@ class TeamController extends GetxController {
         allTeams.value = List<Map<String, dynamic>>.from(response.data['teams']);
       }
     } on DioException catch (e) {
-      Get.snackbar('Error', e.message ?? 'Failed to fetch teams', snackPosition: SnackPosition.BOTTOM);
+      final authController = Get.find<AuthController>();
+      if (authController.adminRole.value == 'super_admin' && allTeams.isEmpty) {
+        // Fallback to mock data for demo
+        allTeams.value = [
+          {
+            'teamId': 'T001',
+            'teamName': 'Alpha Squad',
+            'projectTitle': 'AI Health Assistant',
+            'members': [{'name': 'User 1', 'email': 'u1@ex.com', 'phone': '123'}],
+            'evaluation': null,
+          },
+          {
+            'teamId': 'T002',
+            'teamName': 'Beta Builders',
+            'projectTitle': 'Smart Home IoT',
+            'members': [{'name': 'User 2', 'email': 'u2@ex.com', 'phone': '456'}],
+            'evaluation': {
+              'totalScore': 45,
+              'supervisorEvaluations': {
+                'superadmin': {'total': 45, 'originality': 10, 'technical': 20, 'presentation': 10, 'impact': 5}
+              }
+            },
+          },
+          {
+            'teamId': 'T003',
+            'teamName': 'Gamma Gamers',
+            'projectTitle': 'Unity 3D Game',
+            'members': [{'name': 'User 3', 'email': 'u3@ex.com', 'phone': '789'}],
+            'evaluation': null,
+          },
+        ];
+        Get.snackbar('Demo Mode', 'Backend unreachable. Loading sample teams.', 
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.blue.withOpacity(0.8),
+          colorText: Colors.white);
+      } else {
+        Get.snackbar('Error', e.message ?? 'Failed to fetch teams', snackPosition: SnackPosition.BOTTOM);
+      }
     } finally {
       isLoading.value = false;
     }

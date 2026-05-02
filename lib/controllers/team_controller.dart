@@ -2,6 +2,8 @@ import 'package:get/get.dart' hide Response;
 import '../core/api_service.dart';
 import '../models/team_model.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'auth_controller.dart';
 
 class TeamController extends GetxController {
   final ApiService _apiService = ApiService();
